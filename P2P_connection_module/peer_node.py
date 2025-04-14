@@ -1,7 +1,12 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import threading
 import time
 from peer_discovery import PeerDiscovery
 from peer_communication import PeerCommunicator
+from file_sharing_module.fileTransfer import request_file
+from file_sharing_module.share_manager import share_file, list_shared_files
 
 LOCAL_IP = '127.0.0.1'
 LOCAL_PORT = 10000  # Change for each peer manually
@@ -47,6 +52,8 @@ def cli_menu(discovery: PeerDiscovery, communicator: PeerCommunicator, my_userna
         print("3. Show connected peers")
         print("4. Exit")
         print("5. Respond to pending connection requests")
+        print("6. Request a file from a connected peer")
+        print("7. Share a file")
         choice = input("Select an option: ").strip()
 
         if choice == '1':
@@ -71,6 +78,7 @@ def cli_menu(discovery: PeerDiscovery, communicator: PeerCommunicator, my_userna
                 print("[!] Invalid selection.")
 
         elif choice == '3':
+            communicator.prune_dead_connections()
             if communicator.active_connections:
                 print("Connected peers:")
                 for peer_addr in communicator.active_connections:
@@ -84,6 +92,29 @@ def cli_menu(discovery: PeerDiscovery, communicator: PeerCommunicator, my_userna
 
         elif choice == '5':
             communicator.respond_to_pending_requests()
+
+        elif choice == '6':
+            if not communicator.active_connections:
+                print("[!] No connected peers available to request a file.")
+                continue
+
+            print("Connected peers:")
+            connected_peers = list(communicator.active_connections.keys())
+            for idx, peer in enumerate(connected_peers):
+                print(f"{idx + 1}. {peer}")
+
+            selected = input("Enter peer number to request file from: ").strip()
+            if selected.isdigit() and 1 <= int(selected) <= len(connected_peers):
+                filename = input("Enter the filename to request: ").strip()
+                ip, port = connected_peers[int(selected) - 1]
+                request_file(ip, port, filename)
+            else:
+                print("[!] Invalid selection.")
+
+        elif choice == '7':
+            filepath = input("Enter full path of the file to share: ").strip()
+            share_file(filepath)
+            list_shared_files()
 
         else:
             print("[!] Invalid option. Try again.")

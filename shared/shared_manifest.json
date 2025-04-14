@@ -1,0 +1,30 @@
+[
+    {
+        "filename": "test.txt",
+        "original_name": "test.txt",
+        "encrypted": false,
+        "shared_at": "2025-04-14T18:21:33.744669Z",
+        "note": "This is a placeholder for future encryption metadata."
+    },
+    {
+        "filename": "test2.txt",
+        "original_name": "test2.txt",
+        "encrypted": false,
+        "shared_at": "2025-04-14T19:05:15.316147Z",
+        "note": "This is a placeholder for future encryption metadata."
+    },
+    {
+        "filename": "test3.txt",
+        "original_name": "test3.txt",
+        "encrypted": false,
+        "shared_at": "2025-04-14T19:06:18.652662Z",
+        "note": "This is a placeholder for future encryption metadata."
+    },
+    {
+        "filename": "test.txt",
+        "original_name": "test.txt",
+        "encrypted": false,
+        "shared_at": "2025-04-14T19:26:17.018615Z",
+        "note": "This is a placeholder for future encryption metadata."
+    }
+]

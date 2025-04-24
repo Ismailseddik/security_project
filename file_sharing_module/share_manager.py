@@ -52,3 +52,31 @@ def list_shared_files():
     print("\nShared Files:")
     for idx, entry in enumerate(manifest):
         print(f"{idx + 1}. {entry['filename']} (shared at {entry['shared_at']})")
+        
+def unshare_file():
+    manifest = load_manifest()
+    if not manifest:
+        print("[!] No files to unshare.")
+        return
+
+    print("\nShared Files:")
+    for idx, entry in enumerate(manifest):
+        print(f"{idx + 1}. {entry['filename']} (shared at {entry['shared_at']})")
+
+    try:
+        choice = int(input("Enter the number of the file to unshare: "))
+        if 1 <= choice <= len(manifest):
+            entry = manifest.pop(choice - 1)
+            file_path = os.path.join(SHARED_DIR, entry["filename"])
+            
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                print(f"[-] File '{entry['filename']}' has been unshared and deleted.")
+            else:
+                print(f"[!] File '{entry['filename']}' not found in shared directory.")
+
+            save_manifest(manifest)
+        else:
+            print("[!] Invalid selection.")
+    except ValueError:
+        print("[!] Please enter a valid number.")

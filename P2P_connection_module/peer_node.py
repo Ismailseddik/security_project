@@ -1,15 +1,18 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import threading
 import time
 from peer_discovery import PeerDiscovery
 from peer_communication import PeerCommunicator
 from file_sharing_module.fileTransfer import request_file
-from file_sharing_module.share_manager import share_file, list_shared_files
+from file_sharing_module.share_manager import share_file, list_shared_files, unshare_file
+from user_management_module.user_manager import login_user, register_user
+from user_management_module.session_manager import Session
 
 LOCAL_IP = '127.0.0.1'
-LOCAL_PORT = 10000  # Change for each peer manually
+LOCAL_PORT = 10000  # Change manually for each peer
 HEARTBEAT_INTERVAL = 30  # seconds
 
 heartbeat_count = 0
@@ -20,7 +23,6 @@ def send_heartbeat(discovery: PeerDiscovery):
     while running:
         time.sleep(HEARTBEAT_INTERVAL)
         try:
-            # Heartbeat registration without verbose output
             discovery.register_with_registry(silent=True)
             heartbeat_count += 1
         except Exception as e:
@@ -42,8 +44,17 @@ def shutdown_peer(discovery: PeerDiscovery, communicator: PeerCommunicator):
     communicator.disconnect_all_peers()
     discovery.unregister_from_registry()
     print("[!] Peer shutdown complete.")
-
-def cli_menu(discovery: PeerDiscovery, communicator: PeerCommunicator, my_username):
+    
+def monitor_session(session: Session, discovery: PeerDiscovery, communicator: PeerCommunicator):
+    while running:
+        if session.is_expired():
+            print(f"\n[!] Session expired for {session.username}. Logging out.")
+            shutdown_peer(discovery, communicator)
+            os._exit(0)  # Force exit due to input() blocking
+        time.sleep(5)
+        
+def cli_menu(discovery: PeerDiscovery, communicator: PeerCommunicator, session):
+    my_username = session.username
     global running
     while running:
         print("\n========= Peer Menu =========")
@@ -54,6 +65,9 @@ def cli_menu(discovery: PeerDiscovery, communicator: PeerCommunicator, my_userna
         print("5. Respond to pending connection requests")
         print("6. Request a file from a connected peer")
         print("7. Share a file")
+        print("8. List shared files")
+        print("9. unshare a file")
+        print("10. view session details")
         choice = input("Select an option: ").strip()
 
         if choice == '1':
@@ -115,29 +129,50 @@ def cli_menu(discovery: PeerDiscovery, communicator: PeerCommunicator, my_userna
             filepath = input("Enter full path of the file to share: ").strip()
             share_file(filepath)
             list_shared_files()
-
+            
+        elif choice == '8':
+            list_shared_files()
+            
+        elif choice == '9':
+            unshare_file()   
+        elif choice == '10':
+            print(session)
         else:
             print("[!] Invalid option. Try again.")
 
+def auth_menu():
+    while True:
+        print("\n========= Authentication =========")
+        print("1. Login")
+        print("2. Register")
+        print("3. Exit")
+        choice = input("Select an option: ").strip()
+        if choice == '1':
+            user = login_user()
+            if user:
+                return user
+        elif choice == '2':
+            registered = register_user()
+            if registered:
+                print("[+] You may now log in.")
+        elif choice == '3':
+            print("Exiting...")
+            exit(0)
+        else:
+            print("[!] Invalid option. Try again.")
 
 if __name__ == "__main__":
-    my_username = input("Enter your username: ").strip()
+    session = auth_menu()
+    
 
     discovery = PeerDiscovery(local_ip=LOCAL_IP, local_port=LOCAL_PORT)
     communicator = PeerCommunicator(local_port=LOCAL_PORT)
 
-    # Start listener for incoming peer requests
     threading.Thread(target=communicator.start_listener, daemon=True).start()
     time.sleep(1)
 
-    # Register this peer (only once loudly)
     discovery.register_with_registry()
-
-    # Start heartbeat thread
     threading.Thread(target=send_heartbeat, args=(discovery,), daemon=True).start()
-
-    # Launch interactive CLI
-    cli_menu(discovery, communicator, my_username)
-
-    # Grace period before exiting
+    threading.Thread(target=monitor_session, args=(session, discovery, communicator), daemon=True).start()
+    cli_menu(discovery, communicator, session)
     time.sleep(1)

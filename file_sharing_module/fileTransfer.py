@@ -1,6 +1,7 @@
 import os
 import socket
-import threading
+from encryption_module.encrypt import decrypt_file
+from file_sharing_module.share_manager import load_manifest, compute_file_hash
 
 SHARED_DIR = os.path.join(os.path.dirname(__file__), "../shared")
 DOWNLOAD_DIR = os.path.join(os.path.dirname(__file__), "../downloads")
@@ -33,7 +34,6 @@ def send_file(filename, conn):
     finally:
         conn.close()
 
-
 def handle_incoming_file_request(filename, conn):
     try:
         print(f"[DEBUG] Preparing to send file: {filename}")
@@ -64,6 +64,21 @@ def request_file(peer_ip, port, filename):
                 f.write(data)
 
         print(f"[+] File received and saved to: {save_path}")
+
+        # --- DECRYPTION & INTEGRITY VERIFICATION ---
+        manifest = load_manifest()
+        entry = next((item for item in manifest if item["filename"] == filename), None)
+        if entry and entry.get("encrypted"):
+            key = bytes.fromhex(entry["key"])
+            decrypted_path = os.path.join(DOWNLOAD_DIR, f"decrypted_{filename}")
+            decrypt_file(save_path, decrypted_path, key)
+            print(f"[+] File decrypted and saved to: {decrypted_path}")
+
+            downloaded_hash = compute_file_hash(decrypted_path)
+            if downloaded_hash == entry["hash"]:
+                print("[+] File integrity verified.")
+            else:
+                print("[!] WARNING: File integrity check failed.")
     except Exception as e:
         print(f"[!] Failed to download file from peer: {e}")
     finally:

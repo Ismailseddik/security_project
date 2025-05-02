@@ -4,5 +4,8 @@
     },
     "seddik": {
         "password_hash": "481f6cc0511143ccdd7e2d1b1b94faf0a700a8b49cd13922a70b5ae28acaa8c5"
+    },
+    "ahmed": {
+        "password_hash": "a320480f534776bddb5cdb54b1e93d210a3c7d199e80a23c1b2178497b184c76"
     }
 }

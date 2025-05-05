@@ -10,9 +10,8 @@ from file_sharing_module.fileTransfer import request_file
 from file_sharing_module.share_manager import share_file, list_shared_files, unshare_file
 from user_management_module.user_manager import login_user, register_user
 from user_management_module.session_manager import Session
-
 LOCAL_IP = '127.0.0.1'
-LOCAL_PORT = 10000  # Change manually for each peer
+LOCAL_PORT = 10001  # Change manually for each peer
 HEARTBEAT_INTERVAL = 30  # seconds
 
 heartbeat_count = 0
@@ -72,8 +71,10 @@ def cli_menu(discovery: PeerDiscovery, communicator: PeerCommunicator, session):
 
         if choice == '1':
             discovery.get_active_peers()
+            session.update_activity()
 
         elif choice == '2':
+            session.update_activity()
             peers = discovery.get_active_peers()
             peers = [p for p in peers if int(p.split(":")[1]) != LOCAL_PORT]
             if not peers:
@@ -92,6 +93,7 @@ def cli_menu(discovery: PeerDiscovery, communicator: PeerCommunicator, session):
                 print("[!] Invalid selection.")
 
         elif choice == '3':
+            session.update_activity()
             communicator.prune_dead_connections()
             if communicator.active_connections:
                 print("Connected peers:")
@@ -101,13 +103,16 @@ def cli_menu(discovery: PeerDiscovery, communicator: PeerCommunicator, session):
                 print("[!] No active connections.")
 
         elif choice == '4':
+            session.update_activity()
             shutdown_peer(discovery, communicator)
             break
 
         elif choice == '5':
+            session.update_activity()
             communicator.respond_to_pending_requests()
 
         elif choice == '6':
+            session.update_activity()
             if not communicator.active_connections:
                 print("[!] No connected peers available to request a file.")
                 continue
@@ -118,6 +123,7 @@ def cli_menu(discovery: PeerDiscovery, communicator: PeerCommunicator, session):
                 print(f"{idx + 1}. {peer}")
 
             selected = input("Enter peer number to request file from: ").strip()
+            session.update_activity()
             if selected.isdigit() and 1 <= int(selected) <= len(connected_peers):
                 filename = input("Enter the filename to request: ").strip()
                 ip, port = connected_peers[int(selected) - 1]
@@ -126,16 +132,21 @@ def cli_menu(discovery: PeerDiscovery, communicator: PeerCommunicator, session):
                 print("[!] Invalid selection.")
 
         elif choice == '7':
+            session.update_activity()
             filepath = input("Enter full path of the file to share: ").strip()
+            session.update_activity()
             share_file(filepath, session)
             list_shared_files()
             
         elif choice == '8':
+            session.update_activity()
             list_shared_files()
             
         elif choice == '9':
+            session.update_activity()
             unshare_file()   
         elif choice == '10':
+            session.update_activity()
             print(session)
         else:
             print("[!] Invalid option. Try again.")

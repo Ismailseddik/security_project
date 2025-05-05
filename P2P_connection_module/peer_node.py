@@ -66,8 +66,8 @@ def cli_menu(discovery: PeerDiscovery, communicator: PeerCommunicator, session):
         print("6. Request a file from a connected peer")
         print("7. Share a file")
         print("8. List shared files")
-        print("9. unshare a file")
-        print("10. view session details")
+        print("9. Unshare a file")
+        print("10. View session details")
         choice = input("Select an option: ").strip()
 
         if choice == '1':
@@ -121,13 +121,13 @@ def cli_menu(discovery: PeerDiscovery, communicator: PeerCommunicator, session):
             if selected.isdigit() and 1 <= int(selected) <= len(connected_peers):
                 filename = input("Enter the filename to request: ").strip()
                 ip, port = connected_peers[int(selected) - 1]
-                request_file(ip, port, filename)
+                request_file(ip, port, filename, session)  # ✅ Pass session to access private key
             else:
                 print("[!] Invalid selection.")
 
         elif choice == '7':
             filepath = input("Enter full path of the file to share: ").strip()
-            share_file(filepath)
+            share_file(filepath, session)
             list_shared_files()
             
         elif choice == '8':
@@ -163,7 +163,6 @@ def auth_menu():
 
 if __name__ == "__main__":
     session = auth_menu()
-    
 
     discovery = PeerDiscovery(local_ip=LOCAL_IP, local_port=LOCAL_PORT)
     communicator = PeerCommunicator(local_port=LOCAL_PORT)

@@ -1,7 +1,10 @@
 import os
 import socket
+import base64
 from encryption_module.encrypt import decrypt_file
 from file_sharing_module.share_manager import load_manifest, compute_file_hash
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
 
 SHARED_DIR = os.path.join(os.path.dirname(__file__), "../shared")
 DOWNLOAD_DIR = os.path.join(os.path.dirname(__file__), "../downloads")
@@ -42,7 +45,7 @@ def handle_incoming_file_request(filename, conn):
         print(f"[!] Failed to handle file request: {e}")
         conn.close()
 
-def request_file(peer_ip, port, filename):
+def request_file(peer_ip, port, filename, session):
     save_path = os.path.join(DOWNLOAD_DIR, filename)
     try:
         s = socket.socket()
@@ -68,10 +71,30 @@ def request_file(peer_ip, port, filename):
         # --- DECRYPTION & INTEGRITY VERIFICATION ---
         manifest = load_manifest()
         entry = next((item for item in manifest if item["filename"] == filename), None)
-        if entry and entry.get("encrypted"):
-            key = bytes.fromhex(entry["key"])
+
+        if entry and entry.get("encrypted") and "access" in entry:
+            if session.username not in entry["access"]:
+                print("[!] You are not authorized to decrypt this file.")
+                return
+
+            encrypted_file_key_b64 = entry["access"][session.username]
+            encrypted_file_key = base64.b64decode(encrypted_file_key_b64)
+
+            try:
+                file_key = session.private_key.decrypt(
+                    encrypted_file_key,
+                    padding.OAEP(
+                        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                        algorithm=hashes.SHA256(),
+                        label=None
+                    )
+                )
+            except Exception as e:
+                print(f"[!] Failed to decrypt file key: {e}")
+                return
+
             decrypted_path = os.path.join(DOWNLOAD_DIR, f"decrypted_{filename}")
-            decrypt_file(save_path, decrypted_path, key)
+            decrypt_file(save_path, decrypted_path, file_key)
             print(f"[+] File decrypted and saved to: {decrypted_path}")
 
             downloaded_hash = compute_file_hash(decrypted_path)
@@ -79,6 +102,8 @@ def request_file(peer_ip, port, filename):
                 print("[+] File integrity verified.")
             else:
                 print("[!] WARNING: File integrity check failed.")
+        else:
+            print("[!] No decryption metadata found for this file.")
     except Exception as e:
         print(f"[!] Failed to download file from peer: {e}")
     finally:

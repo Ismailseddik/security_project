@@ -3,9 +3,11 @@
         "filename": "test.txt",
         "original_name": "test.txt",
         "encrypted": true,
-        "shared_at": "2025-05-02T09:21:46.274925Z",
-        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        "note": "AES-256-CBC encryption with padding",
-        "key": "aab8e88ae6f0ddaa668318dff4336c4a137519378a18eadf28a2783bf620aa66"
+        "shared_at": "2025-05-05T20:51:33.489444Z",
+        "hash": "b10124993dbca48aa744f95d1c8c0fe9e70aad2962ceabdb6b6c9fe84e467297",
+        "note": "Encrypted with AES, keys shared via RSA",
+        "access": {
+            "ismail": "Yb6V+kx41eo3ABxprCdEzp0vAEjsGrweGQkRz3wddDrEX2p1b+xDWeyEZYWoSzEyC/OZjJ2faQR6s6pTd9Zv94XpBiY1Hdlt5xlwUOGgKGEuxA5RlJMhf7JAJ4evMb2TJiC4YFsNQPmvlL58l6yNDcGXum3oZnW36psr3cQYRztS/PwqYTeB9WVW27SV082GHsxar8ame/QCPeMzV6qWvMwh9ug3N5GyMFaOrPwvLl7I5y6AcJ2ifB5VQ2yLZ0htGocizA5NCHRBAC/WcIg2rilFDOYGN6ULff6VvkhY+m9X+7ddLdg2pipoAx1g0n1nGJwaFkmpVmy7AFwbmnoBVQ=="
+        }
     }
 ]

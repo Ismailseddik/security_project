@@ -4,8 +4,10 @@ import time
 SESSION_TIMEOUT = 600  # 10 minutes
 
 class Session:
-    def __init__(self, username):
+    def __init__(self, username, derived_key, private_key):
         self.username = username
+        self.derived_key = derived_key      # AES key derived from password
+        self.private_key = private_key      # Decrypted RSA private key (used for file key decryption)
         self.login_time = time.time()
         self.last_active = time.time()
 
